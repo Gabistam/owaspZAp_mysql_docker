@@ -1,0 +1,39 @@
+version: '3'
+
+services:
+  db:
+    image: mysql:5.7
+    container_name: mysql_db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: zapdb
+      MYSQL_USER: zapuser
+      MYSQL_PASSWORD: zappassword
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    ports:
+      - "3406:3306"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    links:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3406
+      PMA_ARBITRARY: 1
+    ports:
+      - "8080:80"
+
+  zap:
+    image: owasp/zap2docker-stable
+    container_name: owasp_zap
+    command: zap.sh -daemon -host 0.0.0.0 -port 8090 -config database.url=jdbc:mysql://db:3306/zapdb -config database.user=zapuser -config database.password=zappassword
+    ports:
+      - "8090:8090"
+    depends_on:
+      - db
+
+volumes:
+  mysql_data:
